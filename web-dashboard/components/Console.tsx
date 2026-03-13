@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { sendCommand } from '@/lib/api';
 import { LogEntry } from '@/lib/api';
 import { Terminal, ChevronRight, Trash2 } from 'lucide-react';
+import CommandPalette from './CommandPalette';
 
 interface Props {
   serverId: string;
@@ -49,6 +50,22 @@ export default function Console({ serverId, logs }: Props) {
       }]);
     }
   }, [command, serverId]);
+
+  const run = useCallback(async (cmd: string) => {
+    const next = cmd.trim();
+    if (!next) return;
+    setLocalLogs(prev => [...prev, { text: `> ${next}`, cls: 'text-accent' }]);
+    setHistory(h => [next, ...h].slice(0, 50));
+    setHistoryIdx(-1);
+    try {
+      await sendCommand(serverId, next);
+    } catch (e: unknown) {
+      setLocalLogs(prev => [...prev, {
+        text: `[ERROR] ${e instanceof Error ? e.message : 'Command failed'}`,
+        cls: 'text-offline',
+      }]);
+    }
+  }, [serverId]);
 
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') { submit(); return; }
@@ -113,6 +130,11 @@ export default function Console({ serverId, logs }: Props) {
           className="flex-1 bg-transparent font-mono text-xs text-text placeholder-text-dim focus:outline-none"
           spellCheck={false}
           autoComplete="off"
+        />
+        <CommandPalette
+          value={command}
+          onPick={(cmd) => { setCommand(cmd); inputRef.current?.focus(); }}
+          onRun={run}
         />
         <button
           onClick={submit}
