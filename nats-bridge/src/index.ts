@@ -22,6 +22,27 @@ const PORT = parseInt(process.env.PORT || '3001', 10);
 const NATS_URL = process.env.NATS_URL || 'nats://shinkansen.proxy.rlwy.net:54149';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
+async function connectNatsWithRetry(url: string): Promise<void> {
+  let attempt = 0;
+  const baseDelayMs = 2000;
+  const maxDelayMs = 30_000;
+
+  while (true) {
+    try {
+      await connectNats(url);
+      return;
+    } catch (err) {
+      attempt += 1;
+      const delay = Math.min(maxDelayMs, baseDelayMs * attempt);
+      console.error(
+        `[NATS] Connection failed (attempt ${attempt}). Check NATS_URL and broker availability. Retrying in ${delay}ms.`,
+        err
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+}
+
 async function main() {
   console.log('╔══════════════════════════════════════╗');
   console.log('║   Minecraft NATS Bridge v1.0.0       ║');
@@ -48,7 +69,7 @@ async function main() {
   initWebSocketServer(server);
 
   // ── Connect to NATS ──
-  await connectNats(NATS_URL);
+  await connectNatsWithRetry(NATS_URL);
 
   // ── Setup NATS handlers ──
   setupHandlers();
