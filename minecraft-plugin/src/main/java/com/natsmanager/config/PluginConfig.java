@@ -27,7 +27,7 @@ public class PluginConfig {
         plugin.reloadConfig();
         FileConfiguration config = plugin.getConfig();
 
-        natsUrl = config.getString("nats-url", "nats://shinkansen.proxy.rlwy.net:54149");
+        natsUrl = config.getString("nats-url", "nats://hopper.proxy.rlwy.net:19506");
         serverId = config.getString("server-id", "server-" + System.currentTimeMillis());
         statusIntervalSeconds = config.getInt("status-interval-seconds", 5);
         heartbeatIntervalSeconds = config.getInt("heartbeat-interval-seconds", 10);
