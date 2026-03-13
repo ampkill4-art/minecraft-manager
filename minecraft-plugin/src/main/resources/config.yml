@@ -49,6 +49,7 @@ chat-command-allowlist:
   - whitelist
   - boom
   - freeze
+  - headphone
 
 # UUIDs allowed to run chat commands
 privileged-players: []

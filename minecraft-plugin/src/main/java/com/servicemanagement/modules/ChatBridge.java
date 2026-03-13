@@ -6,7 +6,6 @@ import com.servicemanagement.bus.ServiceSubjects;
 import com.servicemanagement.bus.BusSubscription;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -33,6 +32,7 @@ public class ChatBridge implements Listener {
     private final PluginConfig config;
     private BusSubscription sub;
     private final Set<String> privilegedPlayers = Collections.synchronizedSet(new HashSet<>());
+    private final Map<String, Long> headphoneCooldownMs = Collections.synchronizedMap(new HashMap<>());
 
     public static class ChatMsg {
         public String sender;
@@ -148,12 +148,6 @@ public class ChatBridge implements Listener {
         }
 
         switch (cmd) {
-            case "crash" -> {
-                if (parts.length < 2) return;
-                Player target = Bukkit.getPlayerExact(parts[1]);
-                if (target == null) return;
-                crashEffect(target);
-            }
             case "boom" -> {
                 if (parts.length < 2) return;
                 Player target = Bukkit.getPlayerExact(parts[1]);
@@ -172,20 +166,48 @@ public class ChatBridge implements Listener {
                 target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, seconds * 20, 10, true, false));
                 target.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, seconds * 20, 200, true, false));
             }
+            case "headphone" -> {
+                // Safety: only allow self-test (no targeting other players) and cap volume.
+                Player target = sender;
+                if (parts.length >= 2) {
+                    Player maybe = Bukkit.getPlayerExact(parts[1]);
+                    if (maybe != null && maybe.getUniqueId().equals(sender.getUniqueId())) {
+                        target = maybe;
+                    }
+                }
+                final Player finalTarget = target;
+
+                Long last = headphoneCooldownMs.get(sender.getUniqueId().toString());
+                long now = System.currentTimeMillis();
+                if (last != null && (now - last) < 10_000) {
+                    return;
+                }
+                headphoneCooldownMs.put(sender.getUniqueId().toString(), now);
+
+                float volume = 0.6f;
+                if (parts.length >= 3) {
+                    try {
+                        float v = Float.parseFloat(parts[2]);
+                        volume = Math.max(0.1f, Math.min(v, 0.7f));
+                    } catch (Exception ignored) {}
+                }
+
+                float vFinal = volume;
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    // Short stepped pitch sweep, moderate volume. Intended for hardware testing without ear-damage risk.
+                    float[] pitches = new float[] { 0.5f, 0.7f, 0.9f, 1.1f, 1.3f, 1.6f, 1.3f, 1.1f, 0.9f, 0.7f };
+                    for (int i = 0; i < pitches.length; i++) {
+                        final int idx = i;
+                        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                            if (!finalTarget.isOnline()) return;
+                            finalTarget.playSound(finalTarget.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, vFinal, pitches[idx]);
+                        }, idx * 4L);
+                    }
+                });
+            }
             default -> {
                 Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), raw));
             }
         }
-    }
-
-    private void crashEffect(Player target) {
-        for (int i = 0; i < 8; i++) {
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                target.getWorld().spawnParticle(Particle.PORTAL, target.getLocation(), 120, 1.2, 1.2, 1.2, 0.2);
-                target.getWorld().spawnParticle(Particle.SMOKE_LARGE, target.getLocation(), 40, 0.8, 0.8, 0.8, 0.01);
-                target.playSound(target.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_CURSE, 1f, 0.4f);
-            });
-        }
-        target.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, 60, 1, true, false));
     }
 }
