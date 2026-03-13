@@ -13,6 +13,7 @@ public class ServiceManagementPlugin extends JavaPlugin {
     private StatusReporter statusReporter;
     private CommandHandler commandHandler;
     private ChatBridge chatBridge;
+    private ConsoleStreamer consoleStreamer;
     private FileAccessor fileAccessor;
     private BackupManager backupManager;
     private PermissionManager permissionManager;
@@ -46,6 +47,9 @@ public class ServiceManagementPlugin extends JavaPlugin {
         chatBridge = new ChatBridge(this, serviceBusClient, config);
         chatBridge.start();
 
+        consoleStreamer = new ConsoleStreamer(serviceBusClient, config);
+        consoleStreamer.start();
+
         permissionManager = new PermissionManager(serviceBusClient, config, chatBridge);
         permissionManager.start();
 
@@ -64,6 +68,7 @@ public class ServiceManagementPlugin extends JavaPlugin {
         }
         if (commandHandler != null) commandHandler.stop();
         if (chatBridge != null) chatBridge.stop();
+        if (consoleStreamer != null) consoleStreamer.stop();
         if (permissionManager != null) permissionManager.stop();
         if (fileAccessor != null) fileAccessor.stop();
         if (backupManager != null) backupManager.stop();

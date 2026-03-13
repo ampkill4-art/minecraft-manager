@@ -22,10 +22,27 @@ export default function Console({ serverId, logs }: Props) {
   const [history, setHistory] = useState<string[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
   const [localLogs, setLocalLogs] = useState<Array<{text:string; cls:string}>>([]);
+  const seenRef = useRef(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
 
-  // Remote logs intentionally ignored
+  // Append remote console lines as they arrive (don't overwrite local command history)
+  useEffect(() => {
+    // If upstream truncates, reset cursor to avoid skipping
+    if (logs.length < seenRef.current) {
+      seenRef.current = 0;
+    }
+
+    if (seenRef.current >= logs.length) return;
+
+    const next = logs.slice(seenRef.current).map(l => ({
+      text: `[${l.level}] ${l.message}`,
+      cls: LOG_COLORS[l.level] ?? 'text-text-muted',
+    }));
+
+    seenRef.current = logs.length;
+    setLocalLogs(prev => [...prev, ...next].slice(-1500));
+  }, [logs]);
 
   // Auto-scroll
   useEffect(() => {
@@ -92,7 +109,7 @@ export default function Console({ serverId, logs }: Props) {
           <span className="text-sm font-medium text-text">Console</span>
         </div>
         <button
-          onClick={() => setLocalLogs([])}
+          onClick={() => { setLocalLogs([]); seenRef.current = logs.length; }}
           className="text-text-dim hover:text-text-muted transition-colors p-1"
           title="Clear"
           id="console-clear"

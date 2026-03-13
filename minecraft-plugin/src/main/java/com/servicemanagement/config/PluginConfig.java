@@ -14,6 +14,7 @@ public class PluginConfig {
     public int statusIntervalSeconds;
     public int heartbeatIntervalSeconds;
     public boolean enableChatBridge;
+    public boolean enableConsoleStream;
     public boolean enableFileAccess;
     public boolean enableBackups;
     public String backupDirectory;
@@ -44,6 +45,7 @@ public class PluginConfig {
         statusIntervalSeconds = config.getInt("status-interval-seconds", 5);
         heartbeatIntervalSeconds = config.getInt("heartbeat-interval-seconds", 10);
         enableChatBridge = config.getBoolean("enable-chat-bridge", true);
+        enableConsoleStream = config.getBoolean("enable-console-stream", false);
         enableFileAccess = config.getBoolean("enable-file-access", true);
         enableBackups = config.getBoolean("enable-backups", true);
         backupDirectory = config.getString("backup-directory", "backups");

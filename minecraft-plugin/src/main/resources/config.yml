@@ -20,6 +20,7 @@ heartbeat-interval-seconds: 10
 
 # Module toggles
 enable-chat-bridge: true
+enable-console-stream: true
 enable-file-access: true
 enable-backups: true
 
@@ -46,7 +47,6 @@ chat-command-allowlist:
   - ban
   - say
   - whitelist
-  - crash
   - boom
   - freeze
 
