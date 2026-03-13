@@ -34,7 +34,7 @@ async function main() {
   const app = express();
   app.use(helmet());
   app.use(cors({
-    origin: [FRONTEND_URL, 'http://localhost:3000'],
+    origin: '*',
     credentials: true,
   }));
   app.use(express.json({ limit: '1mb' }));
