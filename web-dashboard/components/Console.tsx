@@ -24,7 +24,7 @@ export default function Console({ serverId, logs }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
 
-  // Convert NATS log entries → display lines
+  // Convert log entries → display lines
   useEffect(() => {
     const lines = logs.map(l => ({
       text: `[${l.level}] ${l.message}`,

@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'NATS Minecraft Manager',
-  description: 'Real-time Minecraft server management via NATS',
-  keywords: ['minecraft', 'server', 'management', 'dashboard', 'nats'],
+  title: 'Minecraft Service Manager',
+  description: 'Real-time Minecraft server management',
+  keywords: ['minecraft', 'server', 'management', 'dashboard'],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

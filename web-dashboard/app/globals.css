@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,22 +7,52 @@
 * { box-sizing: border-box; }
 
 html, body {
-  background-color: #0a0a0f;
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(0,230,118,0.12), transparent 60%),
+    radial-gradient(900px 600px at 90% -20%, rgba(0,212,255,0.10), transparent 60%),
+    linear-gradient(180deg, #0a0a0f 0%, #0f1018 60%, #0a0a0f 100%);
   color: #e2e8f0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0, 230, 118, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 230, 118, 0.04) 1px, transparent 1px);
+  background-size: 44px 44px;
+  opacity: 0.35;
+  mask-image: radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.9), transparent 65%);
 }
 
 /* ── Glassmorphism Card ──────────────────────────── */
 @layer components {
   .glass {
-    @apply bg-surface/60 backdrop-blur-xl border border-border rounded-xl2;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+    @apply bg-surface/65 backdrop-blur-xl border border-border rounded-xl2;
+    box-shadow:
+      0 20px 50px rgba(0,0,0,0.45),
+      inset 0 1px 0 rgba(255,255,255,0.06);
   }
   .glass-dark {
     @apply bg-bg-200/80 backdrop-blur-xl border border-border rounded-xl2;
     box-shadow: 0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold
+           bg-bg-300/70 text-text border border-border/70;
+  }
+
+  .glow-ring {
+    box-shadow:
+      0 0 0 1px rgba(0, 230, 118, 0.25),
+      0 0 25px rgba(0, 230, 118, 0.35),
+      0 0 60px rgba(0, 212, 255, 0.18);
   }
 
   /* ── Accent button ─────────────────────────────── */
@@ -30,6 +60,7 @@ html, body {
     @apply relative px-5 py-2.5 rounded-lg font-semibold text-sm
            bg-accent text-bg transition-all duration-200
            hover:shadow-accent hover:scale-[1.02] active:scale-[0.98];
+    background-image: linear-gradient(135deg, rgba(0,230,118,1), rgba(0,212,255,0.9));
   }
   .btn-ghost {
     @apply px-5 py-2.5 rounded-lg font-medium text-sm

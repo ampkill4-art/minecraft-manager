@@ -5,4 +5,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "minecraft-nats-manager"
+rootProject.name = "minecraft-service-management"

@@ -44,17 +44,26 @@ export default function ServerPage() {
   }, [router]);
 
   // Initial server load
-  useEffect(() => {
-    (async () => {
-      try {
-        const { server: s } = await getServer(serverId);
-        setServer(s);
-        setStatus(s.status);
-        setPlayers(s.status?.players ?? []);
-      } catch { router.push('/dashboard'); }
-      finally  { setLoading(false); }
-    })();
+  const refreshServer = useCallback(async () => {
+    try {
+      const { server: s } = await getServer(serverId);
+      setServer(s);
+      setStatus(s.status);
+      setPlayers(s.status?.players ?? []);
+    } catch {
+      router.push('/dashboard');
+    } finally {
+      setLoading(false);
+    }
   }, [serverId, router]);
+
+  useEffect(() => { refreshServer(); }, [refreshServer]);
+
+  // Periodic refresh to detect offline status
+  useEffect(() => {
+    const id = setInterval(() => { refreshServer(); }, 15000);
+    return () => clearInterval(id);
+  }, [refreshServer]);
 
   // Real-time WebSocket updates
   const { connected } = useWebSocket(serverId, useCallback((msg) => {
@@ -159,10 +168,7 @@ export default function ServerPage() {
           {tab === 'overview' && (
             <div className="space-y-6">
               <MetricsPanel status={status} />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Console serverId={serverId} logs={logs} />
-                <PlayerList serverId={serverId} players={players} />
-              </div>
+              <PlayerList serverId={serverId} players={players} />
             </div>
           )}
           {tab === 'console' && <Console serverId={serverId} logs={logs} />}

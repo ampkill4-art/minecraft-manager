@@ -33,83 +33,114 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-md animate-fade-in">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 mb-4 shadow-accent">
-            <Server className="w-8 h-8 text-accent" />
+    <div className="min-h-screen relative overflow-hidden">
+      <div className="absolute -top-32 -left-24 h-80 w-80 rounded-full bg-accent/20 blur-3xl" />
+      <div className="absolute -bottom-32 right-0 h-96 w-96 rounded-full bg-cyan/20 blur-3xl" />
+
+      <div className="mx-auto w-full max-w-6xl px-4 py-16 lg:py-24">
+        <div className="grid items-center gap-10 lg:grid-cols-2 animate-fade-in">
+          {/* Brand / Intro */}
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-3">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/10 border border-accent/30 glow-ring">
+                <Server className="w-7 h-7 text-accent" />
+              </div>
+            <div className="chip">Realtime Server Control</div>
+            </div>
+
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight">
+                Service Manager
+              </h1>
+              <p className="text-base md:text-lg text-text-muted mt-3 max-w-xl">
+                A fast, secure command bridge for Minecraft servers with live
+                status, file ops, and console control.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3 text-sm text-text-muted">
+              <span className="chip">Command + RCON-like</span>
+              <span className="chip">File explorer</span>
+              <span className="chip">JWT auth</span>
+              <span className="chip">Live server heartbeat</span>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-text">NATS Manager</h1>
-          <p className="text-sm text-text-muted mt-1">Minecraft Server Dashboard</p>
-        </div>
 
-        {/* Card */}
-        <div className="glass p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-xs font-medium text-text-muted mb-2 uppercase tracking-wider">
-                Username
-              </label>
-              <input
-                type="text"
-                className="input"
-                placeholder="admin"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                required
-                autoFocus
-                id="username"
-              />
+          {/* Card */}
+          <div className="glass p-8 md:p-10">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-semibold text-text">Sign in</h2>
+                <p className="text-xs text-text-dim">Use your admin credentials</p>
+              </div>
+              <div className="text-xs text-text-muted font-mono">v1.0.0</div>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-text-muted mb-2 uppercase tracking-wider">
-                Password
-              </label>
-              <div className="relative">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-xs font-medium text-text-muted mb-2 uppercase tracking-wider">
+                  Username
+                </label>
                 <input
-                  type={showPass ? 'text' : 'password'}
-                  className="input pr-10"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  type="text"
+                  className="input"
+                  placeholder="admin"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
                   required
-                  id="password"
+                  autoFocus
+                  id="username"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-muted transition-colors"
-                >
-                  {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
               </div>
-            </div>
 
-            {error && (
-              <div className="px-4 py-3 rounded-lg bg-offline/10 border border-offline/20 text-offline text-sm">
-                {error}
+              <div>
+                <label className="block text-xs font-medium text-text-muted mb-2 uppercase tracking-wider">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPass ? 'text' : 'password'}
+                    className="input pr-10"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    id="password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-muted transition-colors"
+                  >
+                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
-            )}
 
-            <button
-              type="submit"
-              className="btn-accent w-full flex items-center justify-center gap-2"
-              disabled={loading}
-              id="login-btn"
-            >
-              {loading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Signing in...</>
-              ) : (
-                'Sign In'
+              {error && (
+                <div className="px-4 py-3 rounded-lg bg-offline/10 border border-offline/20 text-offline text-sm">
+                  {error}
+                </div>
               )}
-            </button>
-          </form>
 
-          <p className="text-center text-xs text-text-dim mt-6">
-            Secured with JWT authentication
-          </p>
+              <button
+                type="submit"
+                className="btn-accent w-full flex items-center justify-center gap-2"
+                disabled={loading}
+                id="login-btn"
+              >
+                {loading ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Signing in...</>
+                ) : (
+                  'Sign In'
+                )}
+              </button>
+            </form>
+
+            <p className="text-center text-xs text-text-dim mt-6">
+              Secured with JWT authentication
+            </p>
+          </div>
         </div>
       </div>
     </div>

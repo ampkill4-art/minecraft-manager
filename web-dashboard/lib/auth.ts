@@ -2,7 +2,7 @@
 // Auth helpers — JWT storage and verification
 // ============================================================
 
-const TOKEN_KEY = 'nats_manager_token';
+const TOKEN_KEY = 'service_manager_token';
 
 export function saveToken(token: string): void {
   if (typeof window !== 'undefined') {

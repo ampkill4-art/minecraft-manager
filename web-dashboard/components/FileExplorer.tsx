@@ -35,12 +35,14 @@ export default function FileExplorer({ serverId }: Props) {
   useWebSocket(serverId, useCallback((msg) => {
     if (msg.type === 'file_res') {
       const data = msg.data as { requestId: string; success: boolean; files?: FileEntry[] };
-      if (data.requestId === pendingReqId && data.success && data.files) {
+      if (data.requestId !== pendingReqId) return;
+      if (data.success && data.files) {
         setFiles(data.files.sort((a, b) =>
           a.isDirectory === b.isDirectory ? a.name.localeCompare(b.name) : b.isDirectory ? 1 : -1
         ));
-        setLoading(false);
       }
+      setLoading(false);
+      setPendingReqId(null);
     }
   }, [pendingReqId]));
 

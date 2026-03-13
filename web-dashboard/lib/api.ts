@@ -1,5 +1,5 @@
 // ============================================================
-// API client — typed fetch wrapper for the NATS bridge REST API
+// API client — typed fetch wrapper for the bridge REST API
 // ============================================================
 
 import { getToken } from './auth';

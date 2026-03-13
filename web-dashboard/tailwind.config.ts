@@ -24,8 +24,8 @@ module.exports = {
         text:     { DEFAULT: '#e2e8f0', muted: '#8892a4', dim: '#4a5568' },
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        sans: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'SFMono-Regular', 'monospace'],
       },
       backgroundImage: {
         'grid-pattern': `

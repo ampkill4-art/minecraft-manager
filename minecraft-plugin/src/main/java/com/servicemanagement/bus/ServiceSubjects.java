@@ -1,12 +1,12 @@
-package com.natsmanager.nats;
+package com.servicemanagement.bus;
 
 /**
- * Centralized NATS subject strings for the Minecraft plugin.
+ * Centralized subject strings for the Minecraft plugin.
  * Must mirror the subjects defined in the Node.js bridge.
  */
-public final class NatsSubjects {
+public final class ServiceSubjects {
 
-    private NatsSubjects() {}
+    private ServiceSubjects() {}
 
     private static String sub(String serverId, String channel) {
         return "mc." + serverId + "." + channel;

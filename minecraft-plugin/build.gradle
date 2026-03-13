@@ -1,9 +1,9 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'com.gradleup.shadow' version '9.2.1'
 }
 
-group = 'com.natsmanager'
+group = 'com.servicemanagement'
 version = '1.0.0'
 
 repositories {
@@ -22,7 +22,7 @@ dependencies {
     // Paper API for 1.20.4
     compileOnly "io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT"
 
-    // NATS Java client — shaded into the plugin jar
+    // Broker client — shaded into the plugin jar
     implementation "io.nats:jnats:2.17.2"
 
     // Include Gson for json serialization
@@ -54,10 +54,10 @@ processResources {
     }
 }
 
-// Shadow jar — bundles NATS and Gson into the plugin jar
+// Shadow jar — bundles broker client and Gson into the plugin jar
 shadowJar {
-    relocate 'io.nats', 'com.natsmanager.shadow.nats'
-    relocate 'com.google.gson', 'com.natsmanager.shadow.gson'
+    relocate 'io.nats', 'com.servicemanagement.shadow.nats'
+    relocate 'com.google.gson', 'com.servicemanagement.shadow.gson'
 }
 
 build.dependsOn shadowJar

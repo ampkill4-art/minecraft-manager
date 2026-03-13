@@ -1,9 +1,9 @@
-package com.natsmanager.modules;
+package com.servicemanagement.modules;
 
-import com.natsmanager.config.PluginConfig;
-import com.natsmanager.nats.NatsClient;
-import com.natsmanager.nats.NatsSubjects;
-import io.nats.client.Subscription;
+import com.servicemanagement.config.PluginConfig;
+import com.servicemanagement.bus.ServiceBusClient;
+import com.servicemanagement.bus.ServiceSubjects;
+import com.servicemanagement.bus.BusSubscription;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
@@ -21,9 +21,9 @@ import java.util.Map;
 public class ChatBridge implements Listener {
 
     private final Plugin plugin;
-    private final NatsClient nats;
+    private final ServiceBusClient bus;
     private final PluginConfig config;
-    private Subscription sub;
+    private BusSubscription sub;
 
     public static class ChatMsg {
         public String sender;
@@ -32,9 +32,9 @@ public class ChatBridge implements Listener {
         public String serverId;
     }
 
-    public ChatBridge(Plugin plugin, NatsClient nats, PluginConfig config) {
+    public ChatBridge(Plugin plugin, ServiceBusClient bus, PluginConfig config) {
         this.plugin = plugin;
-        this.nats = nats;
+        this.bus = bus;
         this.config = config;
     }
 
@@ -42,8 +42,9 @@ public class ChatBridge implements Listener {
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
         if (config.enableChatBridge) {
-            sub = nats.subscribe(NatsSubjects.chat(config.serverId), ChatMsg.class, msg -> {
+            sub = bus.subscribeEnvelope(ServiceSubjects.chat(config.serverId), ChatMsg.class, (env, msg) -> {
                 if (msg == null || "game".equals(msg.source)) return;
+                if (msg.sender == null || msg.message == null) return;
                 
                 String formatted = ChatColor.AQUA + "[Web] " + ChatColor.WHITE + msg.sender + ": " + msg.message;
                 Bukkit.getScheduler().runTask(plugin, () -> Bukkit.broadcastMessage(formatted));
@@ -70,7 +71,7 @@ public class ChatBridge implements Listener {
         env.put("timestamp", System.currentTimeMillis());
         env.put("payload", payload);
 
-        nats.publish(NatsSubjects.chat(config.serverId), env);
+        bus.publish(ServiceSubjects.chat(config.serverId), env);
     }
 
     // --- Player Events (Join/Leave/Kick) ---
@@ -92,7 +93,7 @@ public class ChatBridge implements Listener {
         env.put("timestamp", System.currentTimeMillis());
         env.put("payload", payload);
 
-        nats.publish(NatsSubjects.players(config.serverId), env);
+        bus.publish(ServiceSubjects.players(config.serverId), env);
     }
 
     @EventHandler public void onJoin(PlayerJoinEvent e) { pubPlayerEvent("join", e.getPlayer()); }

@@ -1,9 +1,9 @@
-package com.natsmanager.modules;
+package com.servicemanagement.modules;
 
-import com.natsmanager.config.PluginConfig;
-import com.natsmanager.nats.NatsClient;
-import com.natsmanager.nats.NatsSubjects;
-import io.nats.client.Subscription;
+import com.servicemanagement.config.PluginConfig;
+import com.servicemanagement.bus.ServiceBusClient;
+import com.servicemanagement.bus.ServiceSubjects;
+import com.servicemanagement.bus.BusSubscription;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -21,9 +21,9 @@ import java.util.zip.ZipOutputStream;
 public class BackupManager {
 
     private final Plugin plugin;
-    private final NatsClient nats;
+    private final ServiceBusClient bus;
     private final PluginConfig config;
-    private Subscription sub;
+    private BusSubscription sub;
     private boolean isBackingUp = false;
 
     public static class BackupReq {
@@ -32,9 +32,9 @@ public class BackupManager {
         public String serverId;
     }
 
-    public BackupManager(Plugin plugin, NatsClient nats, PluginConfig config) {
+    public BackupManager(Plugin plugin, ServiceBusClient bus, PluginConfig config) {
         this.plugin = plugin;
-        this.nats = nats;
+        this.bus = bus;
         this.config = config;
     }
 
@@ -44,7 +44,7 @@ public class BackupManager {
         File backupDir = new File(plugin.getServer().getWorldContainer(), config.backupDirectory);
         if (!backupDir.exists()) backupDir.mkdirs();
 
-        sub = nats.subscribe(NatsSubjects.backupReq(config.serverId), BackupReq.class, req -> {
+        sub = bus.subscribeEnvelope(ServiceSubjects.backupReq(config.serverId), BackupReq.class, (env, req) -> {
             if (req == null || req.action == null) return;
             
             // Run asynchronously
@@ -83,19 +83,15 @@ public class BackupManager {
             String date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
             File zipFile = new File(backupDir, "world_" + date + ".zip");
 
-            plugin.getLogger().info("Starting backup: " + zipFile.getName());
-
             try (FileOutputStream fos = new FileOutputStream(zipFile);
                  ZipOutputStream zos = new ZipOutputStream(fos)) {
                 zipFile(worldDir, worldDir.getName(), zos);
             }
 
             pruneOldBackups(backupDir);
-            plugin.getLogger().info("Backup complete: " + zipFile.getName());
             sendResponse(req.requestId, true, "Backup created: " + zipFile.getName(), null);
 
         } catch (Exception e) {
-            plugin.getLogger().severe("Backup failed: " + e.getMessage());
             sendResponse(req.requestId, false, "Backup failed: " + e.getMessage(), null);
         } finally {
             isBackingUp = false;
@@ -139,9 +135,7 @@ public class BackupManager {
         int toDelete = files.length - config.maxBackups;
         
         for (int i = 0; i < toDelete; i++) {
-            if (files[i].delete()) {
-                plugin.getLogger().info("Pruned old backup: " + files[i].getName());
-            }
+            files[i].delete();
         }
     }
 
@@ -176,6 +170,6 @@ public class BackupManager {
         env.put("timestamp", System.currentTimeMillis());
         env.put("payload", payload);
 
-        nats.publish(NatsSubjects.backupRes(config.serverId), env);
+        bus.publish(ServiceSubjects.backupRes(config.serverId), env);
     }
 }

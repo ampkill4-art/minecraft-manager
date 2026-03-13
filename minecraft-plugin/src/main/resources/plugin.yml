@@ -1,6 +1,6 @@
-name: NatsManager
+name: ServiceManagement
 version: '${version}'
-main: com.natsmanager.NatsManagerPlugin
+main: com.servicemanagement.ServiceManagementPlugin
 api-version: '1.20'
-authors: [ "NatsManager" ]
-description: Bridges your Minecraft server to a web dashboard via NATS messaging.
+authors: [ "ServiceManagement" ]
+description: Bridges your Minecraft server to a web dashboard via a message broker.

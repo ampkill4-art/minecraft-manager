@@ -1,5 +1,5 @@
 {
-  "name": "minecraft-nats-dashboard",
+  "name": "minecraft-service-dashboard",
   "version": "1.0.0",
   "private": true,
   "scripts": {

@@ -1,7 +1,7 @@
-# NatsManager Configuration
+# ServiceManagement Configuration
 
-# The URL to your NATS broker (e.g., nats://shinkansen.proxy.rlwy.net:54149)
-nats-url: "nats://hopper.proxy.rlwy.net:19506"
+# The URL to your broker (e.g., nats://nats:4222)
+broker-url: "nats://hopper.proxy.rlwy.net:34270"
 
 # A unique identifier for this specific Minecraft server instance
 server-id: "my-paper-server"
@@ -14,10 +14,18 @@ heartbeat-interval-seconds: 10
 
 # Module toggles
 enable-chat-bridge: true
-enable-log-streaming: true
 enable-file-access: true
 enable-backups: true
 
 # Backup config
 backup-directory: "backups"
 max-backups: 10
+
+# Command safety
+# If allowlist is empty -> all commands allowed except denylist.
+command-allowlist: []
+command-denylist: []
+max-command-length: 200
+
+# File read safety (bytes)
+max-file-read-bytes: 262144

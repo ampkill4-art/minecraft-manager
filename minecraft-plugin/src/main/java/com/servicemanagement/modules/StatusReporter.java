@@ -1,8 +1,8 @@
-package com.natsmanager.modules;
+package com.servicemanagement.modules;
 
-import com.natsmanager.config.PluginConfig;
-import com.natsmanager.nats.NatsClient;
-import com.natsmanager.nats.NatsSubjects;
+import com.servicemanagement.config.PluginConfig;
+import com.servicemanagement.bus.ServiceBusClient;
+import com.servicemanagement.bus.ServiceSubjects;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -17,18 +17,18 @@ import java.util.Map;
 public class StatusReporter extends BukkitRunnable {
 
     private final Plugin plugin;
-    private final NatsClient nats;
+    private final ServiceBusClient bus;
     private final PluginConfig config;
 
-    public StatusReporter(Plugin plugin, NatsClient nats, PluginConfig config) {
+    public StatusReporter(Plugin plugin, ServiceBusClient bus, PluginConfig config) {
         this.plugin = plugin;
-        this.nats = nats;
+        this.bus = bus;
         this.config = config;
     }
 
     @Override
     public void run() {
-        if (!nats.isConnected()) return;
+        if (!bus.isConnected()) return;
 
         Map<String, Object> payload = new HashMap<>();
         
@@ -61,12 +61,18 @@ public class StatusReporter extends BukkitRunnable {
             pd.put("uuid", p.getUniqueId().toString());
             pd.put("ping", p.getPing());
             pd.put("health", p.getHealth());
+            Map<String, Object> pos = new HashMap<>();
+            pos.put("x", p.getLocation().getX());
+            pos.put("y", p.getLocation().getY());
+            pos.put("z", p.getLocation().getZ());
+            pd.put("position", pos);
             players.add(pd);
         }
         payload.put("players", players);
 
         // Server info
         payload.put("version", Bukkit.getVersion());
+        payload.put("motd", Bukkit.getMotd());
         long uptime = ManagementFactory.getRuntimeMXBean().getUptime() / 1000;
         payload.put("uptime", uptime);
 
@@ -77,6 +83,6 @@ public class StatusReporter extends BukkitRunnable {
         env.put("timestamp", System.currentTimeMillis());
         env.put("payload", payload);
 
-        nats.publish(NatsSubjects.status(config.serverId), env);
+        bus.publish(ServiceSubjects.status(config.serverId), env);
     }
 }

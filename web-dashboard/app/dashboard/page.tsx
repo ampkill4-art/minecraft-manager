@@ -32,6 +32,12 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchServers(); }, [fetchServers]);
 
+  // Periodic refresh to detect offline servers
+  useEffect(() => {
+    const id = setInterval(() => { fetchServers(); }, 15000);
+    return () => clearInterval(id);
+  }, [fetchServers]);
+
   // Real-time updates via WebSocket
   const { connected } = useWebSocket(null, useCallback((msg) => {
     if (msg.type === 'status' || msg.type === 'heartbeat') {
@@ -65,7 +71,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-accent/10 border border-accent/20">
               <ServerIcon className="w-5 h-5 text-accent" />
             </div>
-            <span className="font-bold text-lg text-text">NATS Manager</span>
+            <span className="font-bold text-lg text-text">Service Manager</span>
           </div>
 
           <div className="flex items-center gap-4">
@@ -116,7 +122,7 @@ export default function DashboardPage() {
             <ServerIcon className="mx-auto mb-4 text-text-dim" size={48} />
             <h3 className="text-lg font-semibold text-text mb-2">No servers connected</h3>
             <p className="text-text-muted text-sm">
-              Install the Fabric mod on your Minecraft server and it will appear here automatically.
+              Install the server plugin and it will appear here automatically.
             </p>
           </div>
         ) : (
