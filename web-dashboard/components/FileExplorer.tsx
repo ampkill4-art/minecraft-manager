@@ -49,7 +49,7 @@ export default function FileExplorer({ serverId }: Props) {
     if (expandedDirs.has(entry.path)) {
       setExpandedDirs(prev => { const s = new Set(prev); s.delete(entry.path); return s; });
     } else {
-      setExpandedDirs(prev => new Set([...prev, entry.path]));
+      setExpandedDirs(prev => { const s = new Set(prev); s.add(entry.path); return s; });
       navigate(entry.path);
     }
   };
