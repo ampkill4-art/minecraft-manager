@@ -1,15 +1,12 @@
 # Netlify deployment configuration
 
 [build]
-  command   = "npm run build"
-  publish   = "out"
+  command = "npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
 [build.environment]
   NEXT_PUBLIC_API_URL = "https://your-railway-service.up.railway.app"
   NEXT_PUBLIC_WS_URL  = "wss://your-railway-service.up.railway.app"
-
-# Redirect all paths to index for SPA routing
-[[redirects]]
-  from   = "/*"
-  to     = "/index.html"
-  status = 200
