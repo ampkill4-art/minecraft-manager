@@ -3,7 +3,7 @@
 // In-memory store tracking all connected Minecraft servers
 // ============================================================
 
-import { TrackedServer, ServerStatus } from '../types';
+import { TrackedServer, ServerStatus } from './types';
 
 /** Map of serverId → server state */
 const servers = new Map<string, TrackedServer>();
