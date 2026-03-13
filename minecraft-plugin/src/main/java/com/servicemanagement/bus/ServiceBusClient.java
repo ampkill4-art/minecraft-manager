@@ -98,6 +98,7 @@ public class ServiceBusClient {
         public String serverId;
         public String type;
         public long timestamp;
+        public String authToken;
         public Object payload;
     }
 
@@ -112,6 +113,32 @@ public class ServiceBusClient {
             try {
                 Envelope env = GSON.fromJson(new String(msg.getData()), Envelope.class);
                 if (env == null || env.payload == null) return;
+                T payload = GSON.fromJson(GSON.toJson(env.payload), payloadClass);
+                handler.accept(env, payload);
+            } catch (Exception e) {
+                // Silent by design
+            }
+        });
+
+        dispatcher.subscribe(subject);
+        return new BusSubscription(dispatcher, subject);
+    }
+
+    public <T> BusSubscription subscribeEnvelope(
+        String subject,
+        Class<T> payloadClass,
+        String expectedToken,
+        java.util.function.BiConsumer<Envelope, T> handler
+    ) {
+        if (connection == null) return null;
+
+        Dispatcher dispatcher = connection.createDispatcher(msg -> {
+            try {
+                Envelope env = GSON.fromJson(new String(msg.getData()), Envelope.class);
+                if (env == null || env.payload == null) return;
+                if (expectedToken != null && !expectedToken.isBlank()) {
+                    if (env.authToken == null || !expectedToken.equals(env.authToken)) return;
+                }
                 T payload = GSON.fromJson(GSON.toJson(env.payload), payloadClass);
                 handler.accept(env, payload);
             } catch (Exception e) {

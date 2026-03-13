@@ -24,14 +24,7 @@ export default function Console({ serverId, logs }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
 
-  // Convert log entries → display lines
-  useEffect(() => {
-    const lines = logs.map(l => ({
-      text: `[${l.level}] ${l.message}`,
-      cls:  LOG_COLORS[l.level] ?? 'text-text-muted',
-    }));
-    setLocalLogs(lines);
-  }, [logs]);
+  // Remote logs intentionally ignored
 
   // Auto-scroll
   useEffect(() => {

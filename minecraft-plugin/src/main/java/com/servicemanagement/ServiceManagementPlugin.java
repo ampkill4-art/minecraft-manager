@@ -15,12 +15,16 @@ public class ServiceManagementPlugin extends JavaPlugin {
     private ChatBridge chatBridge;
     private FileAccessor fileAccessor;
     private BackupManager backupManager;
+    private PermissionManager permissionManager;
 
     @Override
     public void onEnable() {
         // Load config
         config = new PluginConfig(this);
         config.load();
+
+        // Initialize subject prefix
+        com.servicemanagement.bus.ServiceSubjects.init(config.subjectPrefix);
 
         // Connect broker
         serviceBusClient = new ServiceBusClient(config.brokerUrl, getLogger());
@@ -42,6 +46,9 @@ public class ServiceManagementPlugin extends JavaPlugin {
         chatBridge = new ChatBridge(this, serviceBusClient, config);
         chatBridge.start();
 
+        permissionManager = new PermissionManager(serviceBusClient, config, chatBridge);
+        permissionManager.start();
+
         fileAccessor = new FileAccessor(this, serviceBusClient, config);
         fileAccessor.start();
 
@@ -57,6 +64,7 @@ public class ServiceManagementPlugin extends JavaPlugin {
         }
         if (commandHandler != null) commandHandler.stop();
         if (chatBridge != null) chatBridge.stop();
+        if (permissionManager != null) permissionManager.stop();
         if (fileAccessor != null) fileAccessor.stop();
         if (backupManager != null) backupManager.stop();
 

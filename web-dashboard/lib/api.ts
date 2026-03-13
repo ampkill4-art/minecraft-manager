@@ -62,6 +62,21 @@ export const sendChat = (serverId: string, message: string) =>
 export const listFiles = (serverId: string, path = '/') =>
   request<{ requestId: string }>(`/servers/${serverId}/files?path=${encodeURIComponent(path)}`);
 
+export const readFile = (serverId: string, path: string) =>
+  request<{ requestId: string }>(`/servers/${serverId}/files/read?path=${encodeURIComponent(path)}`);
+
+export const writeFile = (serverId: string, path: string, content: string) =>
+  request<{ requestId: string }>(`/servers/${serverId}/files/write`, {
+    method: 'POST',
+    body: JSON.stringify({ path, content }),
+  });
+
+export const deleteFile = (serverId: string, path: string) =>
+  request<{ requestId: string }>(`/servers/${serverId}/files/delete`, {
+    method: 'POST',
+    body: JSON.stringify({ path }),
+  });
+
 // Players
 export const kickPlayer = (serverId: string, name: string, reason?: string) =>
   request<{ requestId: string }>(`/servers/${serverId}/players/${name}/kick`, {
@@ -147,3 +162,12 @@ export interface BackupEntry {
   size: number;
   createdAt: number;
 }
+
+export const getPermissions = (serverId: string) =>
+  request<{ players: string[] }>(`/servers/${serverId}/permissions`);
+
+export const setPermissions = (serverId: string, players: string[]) =>
+  request<{ status: string }>(`/servers/${serverId}/permissions`, {
+    method: 'POST',
+    body: JSON.stringify({ players }),
+  });

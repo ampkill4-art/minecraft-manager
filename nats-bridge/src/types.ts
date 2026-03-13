@@ -14,7 +14,8 @@ export type MessageType =
   | 'file_res'
   | 'player_event'
   | 'backup_req'
-  | 'backup_res';
+  | 'backup_res'
+  | 'perm_req';
 
 /** Base NATS message envelope — every message follows this shape */
 export interface NatsMessage {
@@ -80,8 +81,9 @@ export interface LogEntry {
 /** File request payload */
 export interface FileRequest {
   requestId: string;
-  action: 'list' | 'read';
+  action: 'list' | 'read' | 'write' | 'delete';
   path: string;
+  content?: string;
 }
 
 /** File response payload */
@@ -121,6 +123,11 @@ export interface BackupRequest {
   backupName?: string;
 }
 
+/** Permission request payload */
+export interface PermissionRequest {
+  players: string[];
+}
+
 /** Backup response payload */
 export interface BackupResponse {
   requestId: string;
@@ -144,6 +151,7 @@ export interface TrackedServer {
   lastHeartbeat: number;
   firstSeen: number;
   online: boolean;
+  permissions?: string[];
 }
 
 /** JWT auth payload */

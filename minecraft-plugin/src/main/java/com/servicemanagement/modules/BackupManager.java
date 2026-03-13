@@ -44,7 +44,7 @@ public class BackupManager {
         File backupDir = new File(plugin.getServer().getWorldContainer(), config.backupDirectory);
         if (!backupDir.exists()) backupDir.mkdirs();
 
-        sub = bus.subscribeEnvelope(ServiceSubjects.backupReq(config.serverId), BackupReq.class, (env, req) -> {
+        sub = bus.subscribeEnvelope(ServiceSubjects.backupReq(config.serverId), BackupReq.class, config.bridgeToken, (env, req) -> {
             if (req == null || req.action == null) return;
             
             // Run asynchronously

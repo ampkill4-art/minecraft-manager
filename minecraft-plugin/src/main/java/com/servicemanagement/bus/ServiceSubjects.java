@@ -8,8 +8,16 @@ public final class ServiceSubjects {
 
     private ServiceSubjects() {}
 
+    private static String prefix = "mc";
+
+    public static void init(String subjectPrefix) {
+        if (subjectPrefix != null && !subjectPrefix.isBlank()) {
+            prefix = subjectPrefix.trim();
+        }
+    }
+
     private static String sub(String serverId, String channel) {
-        return "mc." + serverId + "." + channel;
+        return prefix + "." + serverId + "." + channel;
     }
 
     public static String status(String id)      { return sub(id, "status"); }
@@ -23,4 +31,5 @@ public final class ServiceSubjects {
     public static String heartbeat(String id)   { return sub(id, "heartbeat"); }
     public static String backupReq(String id)   { return sub(id, "backup.req"); }
     public static String backupRes(String id)   { return sub(id, "backup.res"); }
+    public static String permReq(String id)     { return sub(id, "perm.req"); }
 }

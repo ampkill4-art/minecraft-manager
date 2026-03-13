@@ -10,6 +10,7 @@ import PlayerList    from '@/components/PlayerList';
 import ChatOverlay   from '@/components/ChatOverlay';
 import FileExplorer  from '@/components/FileExplorer';
 import BackupManager from '@/components/BackupManager';
+import PermissionsPanel from '@/components/PermissionsPanel';
 import {
   Server as ServerIcon, ArrowLeft, Power, RefreshCw, LogOut,
   Wifi, WifiOff, LayoutDashboard, Terminal, Users, MessageSquare,
@@ -168,7 +169,10 @@ export default function ServerPage() {
           {tab === 'overview' && (
             <div className="space-y-6">
               <MetricsPanel status={status} />
-              <PlayerList serverId={serverId} players={players} />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <PlayerList serverId={serverId} players={players} />
+                <PermissionsPanel serverId={serverId} players={players} />
+              </div>
             </div>
           )}
           {tab === 'console' && <Console serverId={serverId} logs={logs} />}

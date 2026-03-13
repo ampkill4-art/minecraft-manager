@@ -3,8 +3,10 @@
 // All subjects follow the pattern: mc.<serverId>.<channel>
 // ============================================================
 
+const PREFIX = process.env.SUBJECT_PREFIX || 'mc';
+
 /** Build a subject string with a server-specific prefix */
-const sub = (serverId: string, channel: string) => `mc.${serverId}.${channel}`;
+const sub = (serverId: string, channel: string) => `${PREFIX}.${serverId}.${channel}`;
 
 export const subjects = {
   /** Server status broadcasts (published by mod) */
@@ -39,6 +41,9 @@ export const subjects = {
 
   /** Backup response (mod → bridge) */
   backupRes:    (id: string) => sub(id, 'backup.res'),
+
+  /** Permission update (bridge → mod) */
+  permReq:      (id: string) => sub(id, 'perm.req'),
 
   /** Wildcard — subscribe to ALL servers for a given channel */
   all:          (channel: string) => `mc.*.${channel}`,

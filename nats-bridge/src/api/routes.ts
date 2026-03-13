@@ -15,9 +15,10 @@ import {
   commandRateLimiter,
   sanitizeCommand,
 } from './middleware';
-import { NatsMessage, CommandRequest, ChatMessage, FileRequest, BackupRequest } from '../types';
+import { NatsMessage, CommandRequest, ChatMessage, FileRequest, BackupRequest, PermissionRequest } from '../types';
 
 const router = Router();
+const BRIDGE_TOKEN = process.env.BRIDGE_TOKEN;
 
 // ── Pre-hashed admin password (computed on startup) ──
 let adminPasswordHash = '';
@@ -102,6 +103,7 @@ router.post(
       serverId: id,
       type: 'command_req',
       timestamp: Date.now(),
+      authToken: BRIDGE_TOKEN,
       payload: { command: sanitized, requestId } as unknown as Record<string, unknown>,
     };
 
@@ -130,6 +132,7 @@ router.post('/servers/:id/chat', authMiddleware, (req: Request, res: Response) =
     serverId: id,
     type: 'chat',
     timestamp: Date.now(),
+    authToken: BRIDGE_TOKEN,
     payload: chatPayload as unknown as Record<string, unknown>,
   };
 
@@ -148,6 +151,7 @@ router.get('/servers/:id/files', authMiddleware, (req: Request, res: Response) =
     serverId: id,
     type: 'file_req',
     timestamp: Date.now(),
+    authToken: BRIDGE_TOKEN,
     payload: fileReq as unknown as Record<string, unknown>,
   };
 
@@ -171,6 +175,59 @@ router.get('/servers/:id/files/read', authMiddleware, (req: Request, res: Respon
     serverId: id,
     type: 'file_req',
     timestamp: Date.now(),
+    authToken: BRIDGE_TOKEN,
+    payload: fileReq as unknown as Record<string, unknown>,
+  };
+
+  publish(subjects.fileReq(id), msg);
+  res.json({ requestId, status: 'requested' });
+});
+
+/** POST /api/servers/:id/files/write — Write file content */
+router.post('/servers/:id/files/write', authMiddleware, (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { path, content } = req.body;
+
+  if (!path || typeof path !== 'string') {
+    res.status(400).json({ error: 'Path is required' });
+    return;
+  }
+  if (typeof content !== 'string') {
+    res.status(400).json({ error: 'Content is required' });
+    return;
+  }
+
+  const requestId = uuidv4();
+  const fileReq: FileRequest = { requestId, action: 'write', path, content };
+  const msg: NatsMessage = {
+    serverId: id,
+    type: 'file_req',
+    timestamp: Date.now(),
+    authToken: BRIDGE_TOKEN,
+    payload: fileReq as unknown as Record<string, unknown>,
+  };
+
+  publish(subjects.fileReq(id), msg);
+  res.json({ requestId, status: 'requested' });
+});
+
+/** POST /api/servers/:id/files/delete — Delete a file */
+router.post('/servers/:id/files/delete', authMiddleware, (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { path } = req.body;
+
+  if (!path || typeof path !== 'string') {
+    res.status(400).json({ error: 'Path is required' });
+    return;
+  }
+
+  const requestId = uuidv4();
+  const fileReq: FileRequest = { requestId, action: 'delete', path };
+  const msg: NatsMessage = {
+    serverId: id,
+    type: 'file_req',
+    timestamp: Date.now(),
+    authToken: BRIDGE_TOKEN,
     payload: fileReq as unknown as Record<string, unknown>,
   };
 
@@ -193,6 +250,7 @@ router.post(
       serverId: id,
       type: 'command_req',
       timestamp: Date.now(),
+      authToken: BRIDGE_TOKEN,
       payload: { command, requestId } as unknown as Record<string, unknown>,
     };
 
@@ -216,6 +274,7 @@ router.post(
       serverId: id,
       type: 'command_req',
       timestamp: Date.now(),
+      authToken: BRIDGE_TOKEN,
       payload: { command, requestId } as unknown as Record<string, unknown>,
     };
 
@@ -240,6 +299,7 @@ router.post('/servers/:id/backup', authMiddleware, (req: Request, res: Response)
     serverId: id,
     type: 'backup_req',
     timestamp: Date.now(),
+    authToken: BRIDGE_TOKEN,
     payload: backupReq as unknown as Record<string, unknown>,
   };
 
@@ -253,3 +313,45 @@ router.get('/health', (_req: Request, res: Response) => {
 });
 
 export default router;
+/** GET /api/servers/:id/permissions — Get privileged players list */
+router.get('/servers/:id/permissions', authMiddleware, (req: Request, res: Response) => {
+  const { id } = req.params;
+  const server = getServer(id);
+  if (!server) {
+    res.status(404).json({ error: 'Server not found' });
+    return;
+  }
+  const perms = (server as unknown as { permissions?: string[] }).permissions || [];
+  res.json({ players: perms });
+});
+
+/** POST /api/servers/:id/permissions — Set privileged players list */
+router.post('/servers/:id/permissions', authMiddleware, (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { players } = req.body as { players?: string[] };
+
+  if (!Array.isArray(players)) {
+    res.status(400).json({ error: 'Players list is required' });
+    return;
+  }
+
+  const server = getServer(id);
+  if (!server) {
+    res.status(404).json({ error: 'Server not found' });
+    return;
+  }
+
+  (server as unknown as { permissions?: string[] }).permissions = players;
+
+  const permReq: PermissionRequest = { players };
+  const msg: NatsMessage = {
+    serverId: id,
+    type: 'perm_req',
+    timestamp: Date.now(),
+    authToken: BRIDGE_TOKEN,
+    payload: permReq as unknown as Record<string, unknown>,
+  };
+
+  publish(subjects.permReq(id), msg);
+  res.json({ status: 'sent' });
+});

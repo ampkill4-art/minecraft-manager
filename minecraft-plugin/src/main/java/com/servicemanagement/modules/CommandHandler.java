@@ -35,7 +35,7 @@ public class CommandHandler {
         String reqSub = ServiceSubjects.commandReq(config.serverId);
         String resSub = ServiceSubjects.commandRes(config.serverId);
 
-        sub = bus.subscribeEnvelope(reqSub, CommandReq.class, (env, req) -> {
+        sub = bus.subscribeEnvelope(reqSub, CommandReq.class, config.bridgeToken, (env, req) -> {
             if (req == null || req.command == null) return;
 
             String command = req.command.trim();

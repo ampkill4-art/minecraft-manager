@@ -1,9 +1,8 @@
 'use client';
 import { useState, useCallback } from 'react';
-import { FileEntry } from '@/lib/api';
-import { listFiles } from '@/lib/api';
+import { FileEntry, listFiles, readFile, writeFile, deleteFile } from '@/lib/api';
 import { useWebSocket } from '@/lib/ws';
-import { Folder, File, ChevronRight, ChevronDown, HardDrive, RefreshCw } from 'lucide-react';
+import { Folder, File, ChevronRight, ChevronDown, HardDrive, RefreshCw, Download, Trash2, Edit3, Save } from 'lucide-react';
 
 interface Props { serverId: string; }
 
@@ -19,13 +18,21 @@ export default function FileExplorer({ serverId }: Props) {
   const [loading, setLoading] = useState(false);
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set());
   const [pendingReqId, setPendingReqId] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<'list' | 'read' | 'write' | 'delete' | null>(null);
+  const [selectedFile, setSelectedFile] = useState<FileEntry | null>(null);
+  const [content, setContent] = useState('');
+  const [editing, setEditing] = useState(false);
 
   const navigate = useCallback(async (newPath: string) => {
     setLoading(true);
     setPath(newPath);
+    setSelectedFile(null);
+    setEditing(false);
+    setContent('');
     try {
       const { requestId } = await listFiles(serverId, newPath);
       setPendingReqId(requestId);
+      setPendingAction('list');
     } catch {
       setLoading(false);
     }
@@ -34,17 +41,30 @@ export default function FileExplorer({ serverId }: Props) {
   // Listen for file_res via WebSocket
   useWebSocket(serverId, useCallback((msg) => {
     if (msg.type === 'file_res') {
-      const data = msg.data as { requestId: string; success: boolean; files?: FileEntry[] };
+      const data = msg.data as { requestId: string; success: boolean; files?: FileEntry[]; content?: string; error?: string };
       if (data.requestId !== pendingReqId) return;
-      if (data.success && data.files) {
+      if (pendingAction === 'list' && data.success && data.files) {
         setFiles(data.files.sort((a, b) =>
           a.isDirectory === b.isDirectory ? a.name.localeCompare(b.name) : b.isDirectory ? 1 : -1
         ));
+        setLoading(false);
       }
-      setLoading(false);
+      if (pendingAction === 'read') {
+        if (data.success && typeof data.content === 'string') {
+          setContent(data.content);
+          setEditing(true);
+        }
+        setLoading(false);
+      }
+      if (pendingAction === 'write' || pendingAction === 'delete') {
+        setLoading(false);
+        navigate(path);
+      }
+
       setPendingReqId(null);
+      setPendingAction(null);
     }
-  }, [pendingReqId]));
+  }, [pendingReqId, pendingAction, navigate, path]));
 
   const toggleDir = (entry: FileEntry) => {
     if (!entry.isDirectory) return;
@@ -57,6 +77,57 @@ export default function FileExplorer({ serverId }: Props) {
   };
 
   const breadcrumbs = path.split('/').filter(Boolean);
+
+  const openFile = async (entry: FileEntry) => {
+    setSelectedFile(entry);
+    setLoading(true);
+    try {
+      const { requestId } = await readFile(serverId, entry.path);
+      setPendingReqId(requestId);
+      setPendingAction('read');
+    } catch {
+      setLoading(false);
+    }
+  };
+
+  const saveFile = async () => {
+    if (!selectedFile) return;
+    setLoading(true);
+    try {
+      const { requestId } = await writeFile(serverId, selectedFile.path, content);
+      setPendingReqId(requestId);
+      setPendingAction('write');
+      setEditing(false);
+    } catch {
+      setLoading(false);
+    }
+  };
+
+  const removeFile = async () => {
+    if (!selectedFile) return;
+    setLoading(true);
+    try {
+      const { requestId } = await deleteFile(serverId, selectedFile.path);
+      setPendingReqId(requestId);
+      setPendingAction('delete');
+      setSelectedFile(null);
+      setEditing(false);
+      setContent('');
+    } catch {
+      setLoading(false);
+    }
+  };
+
+  const downloadFile = () => {
+    if (!selectedFile) return;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = selectedFile.name;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="glass-dark">
@@ -96,7 +167,7 @@ export default function FileExplorer({ serverId }: Props) {
         ) : files.map((f, i) => (
           <div
             key={i}
-            onClick={() => toggleDir(f)}
+            onClick={() => f.isDirectory ? toggleDir(f) : openFile(f)}
             className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-bg-300/50 cursor-pointer group transition-colors"
             id={`file-${f.name}`}
           >
@@ -119,6 +190,44 @@ export default function FileExplorer({ serverId }: Props) {
           </div>
         ))}
       </div>
+
+      {selectedFile && !selectedFile.isDirectory && (
+        <div className="border-t border-border p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-text font-medium truncate">{selectedFile.path}</div>
+            <div className="flex items-center gap-2">
+              <button onClick={downloadFile} className="btn-ghost text-xs flex items-center gap-1" id="file-download">
+                <Download size={12} /> Download
+              </button>
+              <button onClick={removeFile} className="btn-danger text-xs flex items-center gap-1" id="file-delete">
+                <Trash2 size={12} /> Delete
+              </button>
+            </div>
+          </div>
+          {editing ? (
+            <textarea
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              className="w-full h-48 bg-bg-300/80 border border-border rounded-lg p-3 font-mono text-xs text-text"
+            />
+          ) : (
+            <pre className="w-full h-48 bg-bg-300/50 border border-border rounded-lg p-3 font-mono text-xs text-text overflow-auto custom-scroll">
+              {content || 'Empty file'}
+            </pre>
+          )}
+          <div className="flex items-center gap-2">
+            {!editing ? (
+              <button onClick={() => setEditing(true)} className="btn-ghost text-xs flex items-center gap-1" id="file-edit">
+                <Edit3 size={12} /> Edit
+              </button>
+            ) : (
+              <button onClick={saveFile} className="btn-accent text-xs flex items-center gap-1" id="file-save">
+                <Save size={12} /> Save
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

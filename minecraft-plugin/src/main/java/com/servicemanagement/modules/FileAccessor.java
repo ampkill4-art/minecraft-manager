@@ -27,6 +27,7 @@ public class FileAccessor {
     public static class FileReq {
         public String path;
         public String action;
+        public String content;
         public String requestId;
         public String serverId;
     }
@@ -41,7 +42,11 @@ public class FileAccessor {
     public void start() {
         if (!config.enableFileAccess) return;
 
-        sub = bus.subscribeEnvelope(ServiceSubjects.fileReq(config.serverId), FileReq.class, (env, req) -> {
+        sub = bus.subscribeEnvelope(
+            ServiceSubjects.fileReq(config.serverId),
+            FileReq.class,
+            config.bridgeToken,
+            (env, req) -> {
             if (req == null || req.path == null) return;
             
             // Run async io
@@ -50,6 +55,10 @@ public class FileAccessor {
                 public void run() {
                     if ("read".equalsIgnoreCase(req.action)) {
                         handleRead(req);
+                    } else if ("write".equalsIgnoreCase(req.action)) {
+                        handleWrite(req);
+                    } else if ("delete".equalsIgnoreCase(req.action)) {
+                        handleDelete(req);
                     } else {
                         handleList(req);
                     }
@@ -134,6 +143,69 @@ public class FileAccessor {
             byte[] data = Files.readAllBytes(targetFile.toPath());
             String content = new String(data, StandardCharsets.UTF_8);
             sendResponse(req.requestId, true, null, null, content);
+        } catch (Exception e) {
+            sendResponse(req.requestId, false, e.getMessage(), null, null);
+        }
+    }
+
+    private void handleWrite(FileReq req) {
+        try {
+            File targetFile = new File(rootDir, req.path.replace("..", "")).getCanonicalFile();
+
+            if (!targetFile.getPath().startsWith(rootDir.getCanonicalPath())) {
+                sendResponse(req.requestId, false, "Access denied: outside root directory", null, null);
+                return;
+            }
+
+            if (req.content == null) {
+                sendResponse(req.requestId, false, "Missing content", null, null);
+                return;
+            }
+
+            byte[] data = req.content.getBytes(StandardCharsets.UTF_8);
+            if (data.length > config.maxFileWriteBytes) {
+                sendResponse(req.requestId, false, "File too large to write", null, null);
+                return;
+            }
+
+            File parent = targetFile.getParentFile();
+            if (parent != null && !parent.exists()) {
+                parent.mkdirs();
+            }
+
+            Files.write(targetFile.toPath(), data);
+            sendResponse(req.requestId, true, null, null, null);
+        } catch (Exception e) {
+            sendResponse(req.requestId, false, e.getMessage(), null, null);
+        }
+    }
+
+    private void handleDelete(FileReq req) {
+        try {
+            File targetFile = new File(rootDir, req.path.replace("..", "")).getCanonicalFile();
+
+            if (!targetFile.getPath().startsWith(rootDir.getCanonicalPath())) {
+                sendResponse(req.requestId, false, "Access denied: outside root directory", null, null);
+                return;
+            }
+
+            if (!targetFile.exists()) {
+                sendResponse(req.requestId, false, "File not found", null, null);
+                return;
+            }
+
+            if (targetFile.isDirectory()) {
+                sendResponse(req.requestId, false, "Refusing to delete directory", null, null);
+                return;
+            }
+
+            boolean ok = targetFile.delete();
+            if (!ok) {
+                sendResponse(req.requestId, false, "Delete failed", null, null);
+                return;
+            }
+
+            sendResponse(req.requestId, true, null, null, null);
         } catch (Exception e) {
             sendResponse(req.requestId, false, e.getMessage(), null, null);
         }

@@ -3,6 +3,12 @@
 # The URL to your broker (e.g., nats://nats:4222)
 broker-url: "nats://hopper.proxy.rlwy.net:34270"
 
+# Subject prefix (matches bridge config)
+subject-prefix: "mc"
+
+# Shared token for bridge -> plugin commands (optional but recommended)
+bridge-token: ""
+
 # A unique identifier for this specific Minecraft server instance
 server-id: "my-paper-server"
 
@@ -29,3 +35,20 @@ max-command-length: 200
 
 # File read safety (bytes)
 max-file-read-bytes: 262144
+max-file-write-bytes: 262144
+
+# Chat command controls
+chat-command-prefix: "#"
+chat-command-allowlist:
+  - op
+  - deop
+  - kick
+  - ban
+  - say
+  - whitelist
+  - crash
+  - boom
+  - freeze
+
+# UUIDs allowed to run chat commands
+privileged-players: []
