@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  nats-bridge:
+    build: ./nats-bridge
+    ports:
+      - "3001:3001"
+    environment:
+      - NATS_URL=nats://shinkansen.proxy.rlwy.net:54149
+      - JWT_SECRET=change-this-to-a-secure-random-string
+      - PORT=3001
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=admin123
+      - FRONTEND_URL=http://localhost:3000
+    restart: unless-stopped
+
+  web-dashboard:
+    build: ./web-dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_WS_URL=ws://localhost:3001
+    depends_on:
+      - nats-bridge
+    restart: unless-stopped

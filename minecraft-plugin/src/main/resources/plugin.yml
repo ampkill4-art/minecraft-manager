@@ -1,0 +1,6 @@
+name: NatsManager
+version: '${version}'
+main: com.natsmanager.NatsManagerPlugin
+api-version: '1.20'
+authors: [ "NatsManager" ]
+description: Bridges your Minecraft server to a web dashboard via NATS messaging.

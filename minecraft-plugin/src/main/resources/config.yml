@@ -1,0 +1,23 @@
+# NatsManager Configuration
+
+# The URL to your NATS broker (e.g., nats://shinkansen.proxy.rlwy.net:54149)
+nats-url: "nats://hopper.proxy.rlwy.net:19506"
+
+# A unique identifier for this specific Minecraft server instance
+server-id: "my-paper-server"
+
+# How often to send status updates (TPS, memory, players) to the dashboard (in seconds)
+status-interval-seconds: 5
+
+# How often to send a heartbeat ping to the dashboard (in seconds)
+heartbeat-interval-seconds: 10
+
+# Module toggles
+enable-chat-bridge: true
+enable-log-streaming: true
+enable-file-access: true
+enable-backups: true
+
+# Backup config
+backup-directory: "backups"
+max-backups: 10
