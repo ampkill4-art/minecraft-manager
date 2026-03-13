@@ -13,11 +13,11 @@ import BackupManager from '@/components/BackupManager';
 import {
   Server as ServerIcon, ArrowLeft, Power, RefreshCw, LogOut,
   Wifi, WifiOff, LayoutDashboard, Terminal, Users, MessageSquare,
-  FolderOpen, Archive
+  FolderOpen, Archive, LucideProps
 } from 'lucide-react';
 
 type Tab = 'overview' | 'console' | 'players' | 'chat' | 'files' | 'backups';
-const TABS: { id: Tab; label: string; icon: React.ComponentType<{size?: number; className?: string}> }[] = [
+const TABS: { id: Tab; label: string; icon: React.ComponentType<LucideProps> }[] = [
   { id: 'overview', label: 'Overview',  icon: LayoutDashboard },
   { id: 'console',  label: 'Console',   icon: Terminal },
   { id: 'players',  label: 'Players',   icon: Users },
