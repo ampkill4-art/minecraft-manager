@@ -6,7 +6,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { getToken } from './auth';
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001';
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL;
 
 export type WsMessage = {
   type: string;
